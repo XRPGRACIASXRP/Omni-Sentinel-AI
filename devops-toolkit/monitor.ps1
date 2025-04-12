@@ -1,12 +1,32 @@
-# monitor.ps1 - Omni Sentinel AI Monitoring Script
-Write-Host "📡 Starting system monitoring..."
-Start-Sleep -Seconds 2
+# Omni Sentinel AI - System Monitoring Script
 
-$logCount = 5
-for ($i = 1; $i -le $logCount; $i++) {
-    Write-Host "📄 Log Entry #$i: System check OK."
-    Start-Sleep -Seconds 1
+Write-Host "🧠 Monitoring System Health...`n"
+
+# CPU Usage
+$cpuUsage = (Get-Counter '\Processor(_Total)\% Processor Time').CounterSamples.CookedValue
+Write-Host "CPU Usage: $([math]::Round($cpuUsage, 2))%"
+
+# Memory Usage
+$memory = Get-WmiObject Win32_OperatingSystem
+$totalMemory = [math]::Round($memory.TotalVisibleMemorySize / 1MB, 2)
+$freeMemory = [math]::Round($memory.FreePhysicalMemory / 1MB, 2)
+$usedMemory = $totalMemory - $freeMemory
+Write-Host "RAM Usage: $usedMemory GB / $totalMemory GB"
+
+# Disk Usage
+$disk = Get-WmiObject Win32_LogicalDisk -Filter "DriveType=3"
+foreach ($d in $disk) {
+    $used = [math]::Round(($d.Size - $d.FreeSpace) / 1GB, 2)
+    $total = [math]::Round($d.Size / 1GB, 2)
+    Write-Host "Disk [$($d.DeviceID)]: $used GB / $total GB"
 }
 
-Write-Host "🚨 No anomalies detected."
-Write-Host "📊 Monitoring complete."
+# Network Stats
+$netStats = Get-NetAdapterStatistics
+foreach ($adapter in $netStats) {
+    Write-Host "`nAdapter: $($adapter.Name)"
+    Write-Host "  Bytes Sent: $($adapter.OutboundBytes)"
+    Write-Host "  Bytes Received: $($adapter.InboundBytes)"
+}
+
+Write-Host "`n✅ Monitoring complete."
